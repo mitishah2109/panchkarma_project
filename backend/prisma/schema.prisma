@@ -11,3 +11,103 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum Role {
+  PATIENT
+  PRACTITIONER
+  ADMIN
+}
+
+model User {
+  id                        String          @id @default(uuid())
+  email                     String          @unique
+  password                  String
+  role                      Role
+  name                      String
+  createdAt                 DateTime        @default(now())
+  patientProfile            PatientProfile?
+  patientAppointments       Appointment[]   @relation("PatientAppointments")
+  practitionerAppointments  Appointment[]   @relation("PractitionerAppointments")
+  therapyPlans              TherapyPlan[]
+  notifications             Notification[]
+}
+
+model PatientProfile {
+  id             String    @id @default(uuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id])
+  dateOfBirth    DateTime?
+  phone          String?
+  address        String?
+  medicalHistory String?
+  createdAt      DateTime  @default(now())
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  RESCHEDULED
+}
+
+model Appointment {
+  id             String            @id @default(uuid())
+  patientId      String
+  patient        User              @relation("PatientAppointments", fields: [patientId], references: [id])
+  practitionerId String
+  practitioner   User              @relation("PractitionerAppointments", fields: [practitionerId], references: [id])
+  scheduledAt    DateTime
+  status         AppointmentStatus @default(SCHEDULED)
+  notes          String?
+  createdAt      DateTime          @default(now())
+}
+
+enum SessionStatus {
+  SCHEDULED
+  COMPLETED
+  MISSED
+  CANCELLED
+}
+
+model TherapyPlan {
+  id          String           @id @default(uuid())
+  patientId   String
+  patient     User             @relation(fields: [patientId], references: [id])
+  title       String
+  description String?
+  startDate   DateTime         @default(now())
+  sessions    TherapySession[]
+  createdAt   DateTime         @default(now())
+}
+
+model TherapySession {
+  id            String        @id @default(uuid())
+  therapyPlanId String
+  therapyPlan   TherapyPlan   @relation(fields: [therapyPlanId], references: [id])
+  sessionDate   DateTime
+  notes         String?
+  status        SessionStatus @default(SCHEDULED)
+  createdAt     DateTime      @default(now())
+  feedback      Feedback?
+}
+
+model Feedback {
+  id             String         @id @default(uuid())
+  sessionId      String         @unique
+  session        TherapySession @relation(fields: [sessionId], references: [id])
+  symptoms       String?
+  sideEffects    String?
+  painLevel      Int?
+  wellnessRating Int?
+  createdAt      DateTime       @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  message   String
+  type      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
