@@ -4,6 +4,7 @@ const authRoutes = require('./routes/auth.routes');
 const appointmentRoutes = require('./routes/appointment.routes');
 const therapyPlanRoutes = require('./routes/therapyPlan.routes');
 const feedbackRoutes = require('./routes/feedback.routes');
+const progressRoutes = require('./routes/progress.routes');
 const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
@@ -19,6 +20,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/therapy-plans', therapyPlanRoutes);
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/progress', progressRoutes);
 
 app.use(errorHandler);
 
