@@ -26,16 +26,16 @@ export function useMyTherapyPlans(options = {}) {
   });
 }
 
-function usePlanMutation(mutationFn, options) {
+function usePlanMutation(mutationFn, { onSuccess, ...options } = {}) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn,
+    ...options,
     onSuccess: (...args) => {
       qc.invalidateQueries({ queryKey: ['therapy-plans'] });
       qc.invalidateQueries({ queryKey: QUERY_KEYS.progress });
-      options?.onSuccess?.(...args);
+      onSuccess?.(...args);
     },
-    ...options,
   });
 }
 

@@ -26,16 +26,16 @@ export function useMyAppointments(options = {}) {
   });
 }
 
-function useAppointmentMutation(mutationFn, options) {
+function useAppointmentMutation(mutationFn, { onSuccess, ...options } = {}) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn,
+    ...options,
     onSuccess: (...args) => {
       qc.invalidateQueries({ queryKey: ['appointments'] });
       qc.invalidateQueries({ queryKey: QUERY_KEYS.progress });
-      options?.onSuccess?.(...args);
+      onSuccess?.(...args);
     },
-    ...options,
   });
 }
 

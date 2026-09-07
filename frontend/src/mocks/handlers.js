@@ -12,7 +12,31 @@ import * as seed from './data/fixtures';
 const API = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5000/api';
 const url = (path) => `${API}${path}`;
 
-// mutable copies so mock mutations "stick" for the session
+// Mock users persist to localStorage so accounts registered in the mock survive
+// a page reload. Clear with: localStorage.removeItem('pk.mock.users')
+const USERS_KEY = 'pk.mock.users';
+
+function loadUsers() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(USERS_KEY));
+    if (Array.isArray(stored) && stored.length) return stored;
+  } catch {
+    /* ignore malformed storage */
+  }
+  return structuredClone(seed.users);
+}
+
+function saveUsers() {
+  try {
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  } catch {
+    /* storage unavailable — fall back to in-memory only */
+  }
+}
+
+let users = loadUsers();
+
+// these reset on reload — fine for a mock
 let notifications = structuredClone(seed.notifications);
 let preferences = structuredClone(seed.notificationPreferences);
 
@@ -23,7 +47,7 @@ export const handlers = [
   // ---------------- Auth ----------------
   http.post(url('/auth/register'), async ({ request }) => {
     const body = await request.json();
-    const exists = seed.users.some((u) => u.email === body.email);
+    const exists = users.some((u) => u.email === body.email);
     if (exists) {
       return HttpResponse.json({ message: 'Email already in use' }, { status: 409 });
     }
@@ -34,12 +58,16 @@ export const handlers = [
       role: body.role,
       createdAt: new Date().toISOString(),
     };
+    users.push(user);
+    saveUsers();
     return HttpResponse.json({ user }, { status: 201 });
   }),
 
   http.post(url('/auth/login'), async ({ request }) => {
+    // NOTE: the mock does not verify passwords — any password logs you in as
+    // long as the email exists (seeded or registered this session).
     const { email } = await request.json();
-    const user = seed.users.find((u) => u.email === email);
+    const user = users.find((u) => u.email === email);
     if (!user) {
       return HttpResponse.json({ message: 'Invalid email or password' }, { status: 401 });
     }
@@ -53,8 +81,8 @@ export const handlers = [
   http.get(url('/auth/me'), ({ request }) => {
     const auth = request.headers.get('Authorization');
     if (!auth) return HttpResponse.json({ message: 'No token provided' }, { status: 401 });
-    // In the mock we can't decode the real user; return the patient by default.
-    const user = seed.users[0];
+    // In the mock we can't decode the real user; return the first user by default.
+    const user = users[0];
     return HttpResponse.json({
       user: { id: user.id, role: user.role, iat: 0, exp: 0 },
     });

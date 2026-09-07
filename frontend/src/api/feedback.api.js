@@ -21,15 +21,15 @@ export function useMyFeedback(options = {}) {
   });
 }
 
-export function useSubmitFeedback(options = {}) {
+export function useSubmitFeedback({ onSuccess, ...options } = {}) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: submitFeedback,
+    ...options,
     onSuccess: (...args) => {
       qc.invalidateQueries({ queryKey: ['feedback'] });
       qc.invalidateQueries({ queryKey: QUERY_KEYS.progress });
-      options.onSuccess?.(...args);
+      onSuccess?.(...args);
     },
-    ...options,
   });
 }

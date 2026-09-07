@@ -1,21 +1,21 @@
 @import 'tailwindcss';
 
 /*
-  Tailwind v4 CSS-first config.
-  Design tokens live here (no tailwind.config.js). Extend the palette as the
-  design system firms up. Ayurvedic-leaning greens + warm earth accents.
+  Tailwind v4 CSS-first config — design tokens live here, no tailwind.config.js.
+  Palette tuned to the Ayurveda green look: deep forest primary, soft mint
+  surfaces, warm clay accent.
 */
 @theme {
-  --color-brand-50: #f0fdf9;
-  --color-brand-100: #ccfbef;
-  --color-brand-200: #99f6e0;
-  --color-brand-300: #5fe9ce;
-  --color-brand-400: #2dd4bd;
-  --color-brand-500: #14b8a3;
-  --color-brand-600: #0d9488;
-  --color-brand-700: #0f766e;
-  --color-brand-800: #115e57;
-  --color-brand-900: #134e49;
+  --color-brand-50: #eef7f1;
+  --color-brand-100: #d7ebdf;
+  --color-brand-200: #afd8bf;
+  --color-brand-300: #82bf9a;
+  --color-brand-400: #539f72;
+  --color-brand-500: #327f53;
+  --color-brand-600: #1f6b41; /* primary buttons / active nav */
+  --color-brand-700: #16512f; /* dark stat card, hover */
+  --color-brand-800: #123f25;
+  --color-brand-900: #0d2e1b;
 
   --color-clay-50: #fbf7f1;
   --color-clay-100: #f3e9db;
@@ -25,11 +25,14 @@
   --color-clay-500: #b98246;
   --color-clay-600: #a06a3a;
   --color-clay-700: #815432;
-  --color-clay-800: #6a452e;
-  --color-clay-900: #593b29;
+
+  --color-surface: #ffffff;
+  --color-canvas: #f5f7f5;
 
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
+
+  --radius-card: 1rem;
 }
 
 html,
@@ -39,5 +42,16 @@ body,
 }
 
 body {
-  @apply bg-slate-50 text-slate-800 antialiased;
+  @apply bg-[color:var(--color-canvas)] text-slate-800 antialiased;
+}
+
+/* diagonal stripe used on profile / brand banners */
+.bg-stripes {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.08) 0,
+    rgba(255, 255, 255, 0.08) 1px,
+    transparent 1px,
+    transparent 12px
+  );
 }

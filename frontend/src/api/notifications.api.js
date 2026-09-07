@@ -31,15 +31,15 @@ export function useNotifications(options = {}) {
   });
 }
 
-function useNotificationMutation(mutationFn, options) {
+function useNotificationMutation(mutationFn, { onSuccess, ...options } = {}) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn,
+    ...options,
     onSuccess: (...args) => {
       qc.invalidateQueries({ queryKey: QUERY_KEYS.notifications });
-      options?.onSuccess?.(...args);
+      onSuccess?.(...args);
     },
-    ...options,
   });
 }
 
@@ -55,14 +55,14 @@ export function useNotificationPreferences(options = {}) {
   });
 }
 
-export function useUpdateNotificationPreferences(options = {}) {
+export function useUpdateNotificationPreferences({ onSuccess, ...options } = {}) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: updateNotificationPreferences,
+    ...options,
     onSuccess: (...args) => {
       qc.invalidateQueries({ queryKey: ['notifications', 'preferences'] });
-      options.onSuccess?.(...args);
+      onSuccess?.(...args);
     },
-    ...options,
   });
 }

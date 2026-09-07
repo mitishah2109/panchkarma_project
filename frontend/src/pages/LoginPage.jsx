@@ -1,18 +1,21 @@
-import { Link } from 'react-router-dom';
-import { ROUTES } from '@/lib/constants';
+import { useLocation } from 'react-router-dom';
+import { CheckCircle2 } from 'lucide-react';
 
-/**
- * Placeholder. Real auth form (react-hook-form + zod + useLogin mutation)
- * comes in the auth feature step.
- */
+import AuthLayout from '@/components/layout/AuthLayout';
+import LoginForm from '@/features/auth/LoginForm';
+
 export default function LoginPage() {
+  const { state } = useLocation();
+
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-4 p-6">
-      <h1 className="text-2xl font-semibold text-brand-700">Sign in</h1>
-      <p className="text-sm text-slate-500">Auth form goes here.</p>
-      <Link to={ROUTES.REGISTER} className="text-sm text-brand-600 underline">
-        Need an account? Register
-      </Link>
-    </div>
+    <AuthLayout title="Welcome back" subtitle="Sign in to your clinic workspace">
+      {state?.registered && (
+        <div className="mb-4 flex items-start gap-2 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-800">
+          <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
+          <span>Account created. Sign in with your new credentials.</span>
+        </div>
+      )}
+      <LoginForm />
+    </AuthLayout>
   );
 }

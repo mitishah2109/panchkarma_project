@@ -3,11 +3,21 @@
  * router, guards, and nav menus never drift apart.
  */
 
+/** Product branding — single place to rename the app / swap the logo mark. */
+export const APP = {
+  name: 'AyurNova',
+  tagline: 'Ayurveda Suite',
+  blurb: 'Plan, prioritise and accomplish your Panchakarma therapies with ease.',
+};
+
 export const ROLES = {
   PATIENT: 'PATIENT',
   PRACTITIONER: 'PRACTITIONER',
   ADMIN: 'ADMIN',
 };
+
+/** Roles a visitor is allowed to self-register as. */
+export const REGISTERABLE_ROLES = [ROLES.PATIENT, ROLES.PRACTITIONER];
 
 export const ROLE_LABELS = {
   [ROLES.PATIENT]: 'Patient',

@@ -17,15 +17,15 @@ export const getMeRequest = () => http.get(ENDPOINTS.auth.me);
 
 // ---- react-query hooks ----
 
-export function useLogin(options = {}) {
+export function useLogin({ onSuccess, ...options } = {}) {
   const setAuth = useAuthStore((s) => s.setAuth);
   return useMutation({
     mutationFn: loginRequest,
+    ...options,
     onSuccess: (data, ...rest) => {
       setAuth(data);
-      options.onSuccess?.(data, ...rest);
+      onSuccess?.(data, ...rest);
     },
-    ...options,
   });
 }
 
