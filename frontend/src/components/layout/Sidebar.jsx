@@ -6,17 +6,17 @@ import {
   Bell,
   MessageSquareHeart,
   Video,
+  Settings,
+  LifeBuoy,
+  Leaf,
 } from 'lucide-react';
 import { useUiStore } from '@/store/uiStore';
 import { useAuth } from '@/hooks/useAuth';
-import { ROUTES, ROLES } from '@/lib/constants';
+import { ROUTES, ROLES, APP } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
-/**
- * Left nav. `roles` on an item limits which roles see it (omit = all roles).
- * Routes here are placeholders — the pages get built feature by feature.
- */
-const NAV_ITEMS = [
+/** `roles` limits visibility; omit = visible to everyone. */
+const MENU = [
   { to: ROUTES.DASHBOARD, label: 'Dashboard', icon: LayoutDashboard },
   { to: ROUTES.APPOINTMENTS, label: 'Appointments', icon: CalendarDays },
   { to: ROUTES.THERAPY_PLANS, label: 'Therapy Plans', icon: ClipboardList },
@@ -25,38 +25,87 @@ const NAV_ITEMS = [
   { to: ROUTES.VIDEO_CONSULT, label: 'Consult', icon: Video },
 ];
 
+const GENERAL = [
+  { to: ROUTES.SETTINGS, label: 'Settings', icon: Settings },
+  { to: ROUTES.HELP, label: 'Help', icon: LifeBuoy },
+];
+
+function Item({ to, label, icon: Icon, collapsed }) {
+  return (
+    <NavLink
+      to={to}
+      className={({ isActive }) =>
+        cn(
+          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+          isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100'
+        )
+      }
+    >
+      <Icon className="size-4 shrink-0" />
+      <span className={cn(collapsed && 'lg:hidden')}>{label}</span>
+    </NavLink>
+  );
+}
+
 export default function Sidebar() {
   const sidebarOpen = useUiStore((s) => s.sidebarOpen);
   const { role } = useAuth();
+  const collapsed = !sidebarOpen;
 
-  const items = NAV_ITEMS.filter((item) => !item.roles || item.roles.includes(role));
+  const menu = MENU.filter((i) => !i.roles || i.roles.includes(role));
 
   return (
     <aside
       className={cn(
-        'shrink-0 border-r border-slate-200 bg-white transition-all duration-200',
-        sidebarOpen ? 'w-56' : 'w-0 overflow-hidden lg:w-16'
+        'flex shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-200',
+        sidebarOpen ? 'w-60' : 'w-0 overflow-hidden lg:w-16'
       )}
     >
-      <nav className="flex flex-col gap-1 p-3">
-        {items.map(({ to, label, icon: Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium',
-                isActive
-                  ? 'bg-brand-50 text-brand-700'
-                  : 'text-slate-600 hover:bg-slate-100'
-              )
-            }
-          >
-            <Icon className="size-4 shrink-0" />
-            <span className={cn(!sidebarOpen && 'lg:hidden')}>{label}</span>
-          </NavLink>
-        ))}
+      {/* Brand */}
+      <div className="flex items-center gap-3 px-4 py-4">
+        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand-600 text-white">
+          <Leaf className="size-5" />
+        </span>
+        <div className={cn('leading-tight', collapsed && 'lg:hidden')}>
+          <p className="text-sm font-semibold text-slate-900">{APP.name}</p>
+          <p className="text-xs text-slate-400">{APP.tagline}</p>
+        </div>
+      </div>
+
+      <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-2">
+        <div className="space-y-1">
+          <p className={cn('px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400', collapsed && 'lg:hidden')}>
+            Menu
+          </p>
+          {menu.map((i) => (
+            <Item key={i.to} {...i} collapsed={collapsed} />
+          ))}
+        </div>
+
+        <div className="space-y-1">
+          <p className={cn('px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400', collapsed && 'lg:hidden')}>
+            General
+          </p>
+          {GENERAL.map((i) => (
+            <Item key={i.to} {...i} collapsed={collapsed} />
+          ))}
+        </div>
       </nav>
+
+      {/* Support card */}
+      <div className={cn('p-3', collapsed && 'lg:hidden')}>
+        <div className="rounded-xl bg-brand-600 p-4 text-white">
+          <LifeBuoy className="mb-2 size-5" />
+          <p className="text-sm font-semibold">Need help?</p>
+          <p className="mt-1 text-xs text-white/75">Our care team is here for you 24/7.</p>
+          <NavLink
+            to={ROUTES.HELP}
+            className="mt-3 inline-block rounded-lg bg-white/15 px-3 py-1.5 text-xs font-medium hover:bg-white/25"
+          >
+            Contact support
+          </NavLink>
+        </div>
+      </div>
     </aside>
   );
 }

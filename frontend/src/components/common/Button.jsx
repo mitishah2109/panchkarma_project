@@ -15,9 +15,11 @@ const SIZES = {
 };
 
 /**
- * Base button. Placeholder-level — extend with icon slots etc. as needed.
+ * Base button. Pass `as={Link}` (or any component/tag) to render something other
+ * than a <button> while keeping the styling — useful for nav actions.
  */
 export default function Button({
+  as: Component = 'button',
   variant = 'primary',
   size = 'md',
   loading = false,
@@ -26,8 +28,9 @@ export default function Button({
   children,
   ...props
 }) {
+  const isNativeButton = Component === 'button';
   return (
-    <button
+    <Component
       className={cn(
         'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors',
         'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2',
@@ -36,11 +39,12 @@ export default function Button({
         SIZES[size],
         className
       )}
-      disabled={disabled || loading}
+      disabled={isNativeButton ? disabled || loading : undefined}
+      aria-disabled={!isNativeButton && (disabled || loading) ? true : undefined}
       {...props}
     >
       {loading && <Loader2 className="size-4 animate-spin" />}
       {children}
-    </button>
+    </Component>
   );
 }

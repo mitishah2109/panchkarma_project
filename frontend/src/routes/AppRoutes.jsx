@@ -7,6 +7,8 @@ import ProtectedRoute from './ProtectedRoute';
 import LoginPage from '@/pages/LoginPage';
 import RegisterPage from '@/pages/RegisterPage';
 import DashboardPage from '@/pages/DashboardPage';
+import SettingsPage from '@/pages/SettingsPage';
+import HelpPage from '@/pages/HelpPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 
 /** Keeps logged-in users away from /login and /register. */
@@ -42,6 +44,22 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute>
             <DashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={ROUTES.SETTINGS}
+        element={
+          <ProtectedRoute>
+            <SettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={ROUTES.HELP}
+        element={
+          <ProtectedRoute>
+            <HelpPage />
           </ProtectedRoute>
         }
       />

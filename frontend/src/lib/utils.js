@@ -20,3 +20,14 @@ export function tryParseJson(value, fallback = null) {
     return fallback;
   }
 }
+
+/** True if two date-ish values fall on the same calendar day. */
+export function isSameDay(a, b) {
+  const d1 = a instanceof Date ? a : new Date(a);
+  const d2 = b instanceof Date ? b : new Date(b);
+  return (
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
+  );
+}
