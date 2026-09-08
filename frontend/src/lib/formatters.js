@@ -52,3 +52,24 @@ export function initials(name = '') {
 /** "SCHEDULED" -> "Scheduled" */
 export const titleCase = (str = '') =>
   str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+
+/**
+ * Value for <input type="datetime-local"> — local time, "YYYY-MM-DDTHH:mm".
+ * Pass nothing for "now rounded to the next hour".
+ */
+export function toDatetimeLocal(value) {
+  const d = value ? toDate(value) : nextHour();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(
+    d.getMinutes()
+  )}`;
+}
+
+function nextHour() {
+  const d = new Date();
+  d.setHours(d.getHours() + 1, 0, 0, 0);
+  return d;
+}
+
+/** datetime-local string ("2026-09-20T10:30") -> ISO string in UTC. */
+export const datetimeLocalToISO = (value) => (value ? new Date(value).toISOString() : null);

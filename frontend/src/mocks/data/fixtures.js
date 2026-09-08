@@ -30,7 +30,52 @@ export const users = [
     role: 'ADMIN',
     createdAt: '2026-06-01T09:00:00.000Z',
   },
+  {
+    id: 'u-practitioner-2',
+    name: 'Dr. Vikram Sethi',
+    email: 'vikram@demo.com',
+    role: 'PRACTITIONER',
+    createdAt: '2026-06-15T09:00:00.000Z',
+  },
+  {
+    id: 'u-practitioner-3',
+    name: 'Dr. Anand Rao',
+    email: 'anand@demo.com',
+    role: 'PRACTITIONER',
+    createdAt: '2026-06-15T09:00:00.000Z',
+  },
+  {
+    id: 'u-practitioner-4',
+    name: 'Dr. Priya Menon',
+    email: 'priya@demo.com',
+    role: 'PRACTITIONER',
+    createdAt: '2026-06-15T09:00:00.000Z',
+  },
+  {
+    id: 'u-patient-2',
+    name: 'Riya Sharma',
+    email: 'riya@demo.com',
+    role: 'PATIENT',
+    createdAt: '2026-07-10T09:00:00.000Z',
+  },
+  {
+    id: 'u-patient-3',
+    name: 'Kavya Iyer',
+    email: 'kavya@demo.com',
+    role: 'PATIENT',
+    createdAt: '2026-07-18T09:00:00.000Z',
+  },
 ];
+
+/** Convenience view — practitioners only, in the shape the picker expects. */
+export const practitioners = users
+  .filter((u) => u.role === 'PRACTITIONER')
+  .map(({ id, name, email }) => ({ id, name, email, speciality: 'Panchakarma' }));
+
+/** Convenience view — patients only, for the "assign plan" picker. */
+export const patients = users
+  .filter((u) => u.role === 'PATIENT')
+  .map(({ id, name, email }) => ({ id, name, email }));
 
 export const appointments = [
   {

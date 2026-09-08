@@ -7,6 +7,8 @@ import ProtectedRoute from './ProtectedRoute';
 import LoginPage from '@/pages/LoginPage';
 import RegisterPage from '@/pages/RegisterPage';
 import DashboardPage from '@/pages/DashboardPage';
+import AppointmentsPage from '@/pages/AppointmentsPage';
+import TherapyPlansPage from '@/pages/TherapyPlansPage';
 import SettingsPage from '@/pages/SettingsPage';
 import HelpPage from '@/pages/HelpPage';
 import NotFoundPage from '@/pages/NotFoundPage';
@@ -44,6 +46,22 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute>
             <DashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={ROUTES.APPOINTMENTS}
+        element={
+          <ProtectedRoute>
+            <AppointmentsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={ROUTES.THERAPY_PLANS}
+        element={
+          <ProtectedRoute>
+            <TherapyPlansPage />
           </ProtectedRoute>
         }
       />

@@ -22,6 +22,15 @@ export const ENDPOINTS = {
     cancel: (id) => `/appointments/${id}/cancel`,
   },
 
+  // ---- Practitioners / patients [mock] ----
+  // No backend list endpoints yet; needed for the booking & plan-assignment pickers.
+  practitioners: {
+    root: '/practitioners',
+  },
+  patients: {
+    root: '/patients',
+  },
+
   // ---- Therapy plans [live] ----
   therapyPlans: {
     root: '/therapy-plans',

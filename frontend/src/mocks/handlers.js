@@ -37,8 +37,23 @@ function saveUsers() {
 let users = loadUsers();
 
 // these reset on reload — fine for a mock
+let appointments = structuredClone(seed.appointments);
+let therapyPlans = structuredClone(seed.therapyPlans);
 let notifications = structuredClone(seed.notifications);
 let preferences = structuredClone(seed.notificationPreferences);
+
+/** Mirrors the backend's ±60-minute window check for a practitioner. */
+function hasConflict(practitionerId, scheduledAt, excludeId) {
+  const start = new Date(scheduledAt).getTime();
+  const WINDOW = 60 * 60 * 1000;
+  return appointments.some(
+    (a) =>
+      a.id !== excludeId &&
+      a.practitionerId === practitionerId &&
+      a.status !== 'CANCELLED' &&
+      Math.abs(new Date(a.scheduledAt).getTime() - start) < WINDOW
+  );
+}
 
 const fakeJwt = (sub) =>
   `mock.${btoa(JSON.stringify({ id: sub, iat: Date.now() }))}.sig`;
@@ -88,67 +103,108 @@ export const handlers = [
     });
   }),
 
-  // ------------- Appointments -------------
-  http.get(url('/appointments/me'), () =>
-    HttpResponse.json({ appointments: seed.appointments })
+  // ------------- Practitioners -------------
+  http.get(url('/practitioners'), () =>
+    HttpResponse.json({ practitioners: seed.practitioners })
   ),
+
+  // ------------- Appointments -------------
+  http.get(url('/appointments/me'), () => HttpResponse.json({ appointments })),
+
   http.post(url('/appointments'), async ({ request }) => {
     const body = await request.json();
+    if (hasConflict(body.practitionerId, body.scheduledAt)) {
+      return HttpResponse.json(
+        { message: 'This time slot is not available for the selected practitioner' },
+        { status: 409 }
+      );
+    }
     const appointment = {
       id: `appt-${Date.now()}`,
       patientId: 'u-patient-1',
       status: 'SCHEDULED',
+      notes: null,
       createdAt: new Date().toISOString(),
       ...body,
     };
+    appointments = [...appointments, appointment];
     return HttpResponse.json({ appointment }, { status: 201 });
   }),
+
   http.patch(url('/appointments/:id/reschedule'), async ({ params, request }) => {
     const body = await request.json();
-    return HttpResponse.json({
-      appointment: { id: params.id, status: 'RESCHEDULED', ...body },
-    });
+    const current = appointments.find((a) => a.id === params.id);
+    if (!current) return HttpResponse.json({ message: 'Appointment not found' }, { status: 404 });
+    if (hasConflict(current.practitionerId, body.scheduledAt, params.id)) {
+      return HttpResponse.json(
+        { message: 'This time slot is not available for the selected practitioner' },
+        { status: 409 }
+      );
+    }
+    const updated = { ...current, scheduledAt: body.scheduledAt, status: 'RESCHEDULED' };
+    appointments = appointments.map((a) => (a.id === params.id ? updated : a));
+    return HttpResponse.json({ appointment: updated });
   }),
-  http.patch(url('/appointments/:id/cancel'), ({ params }) =>
-    HttpResponse.json({ appointment: { id: params.id, status: 'CANCELLED' } })
-  ),
+
+  http.patch(url('/appointments/:id/cancel'), ({ params }) => {
+    const current = appointments.find((a) => a.id === params.id);
+    if (!current) return HttpResponse.json({ message: 'Appointment not found' }, { status: 404 });
+    const updated = { ...current, status: 'CANCELLED' };
+    appointments = appointments.map((a) => (a.id === params.id ? updated : a));
+    return HttpResponse.json({ appointment: updated });
+  }),
+
+  // ------------- Patients -------------
+  http.get(url('/patients'), () => HttpResponse.json({ patients: seed.patients })),
 
   // ------------- Therapy plans -------------
-  http.get(url('/therapy-plans/me'), () =>
-    HttpResponse.json({ plans: seed.therapyPlans })
-  ),
+  http.get(url('/therapy-plans/me'), () => HttpResponse.json({ plans: therapyPlans })),
+
   http.post(url('/therapy-plans'), async ({ request }) => {
     const body = await request.json();
-    return HttpResponse.json(
-      {
-        plan: {
-          id: `plan-${Date.now()}`,
-          startDate: new Date().toISOString(),
-          createdAt: new Date().toISOString(),
-          sessions: [],
-          ...body,
-        },
-      },
-      { status: 201 }
-    );
+    const plan = {
+      id: `plan-${Date.now()}`,
+      startDate: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      description: null,
+      sessions: [],
+      ...body,
+    };
+    therapyPlans = [plan, ...therapyPlans];
+    return HttpResponse.json({ plan }, { status: 201 });
   }),
+
   http.post(url('/therapy-plans/:planId/sessions'), async ({ params, request }) => {
     const body = await request.json();
-    return HttpResponse.json(
-      {
-        session: {
-          id: `sess-${Date.now()}`,
-          therapyPlanId: params.planId,
-          status: 'SCHEDULED',
-          ...body,
-        },
-      },
-      { status: 201 }
+    const plan = therapyPlans.find((p) => p.id === params.planId);
+    if (!plan) return HttpResponse.json({ message: 'Therapy plan not found' }, { status: 404 });
+    const session = {
+      id: `sess-${Date.now()}`,
+      therapyPlanId: params.planId,
+      status: 'SCHEDULED',
+      notes: null,
+      ...body,
+    };
+    plan.sessions = [...plan.sessions, session].sort(
+      (a, b) => new Date(a.sessionDate) - new Date(b.sessionDate)
     );
+    therapyPlans = [...therapyPlans];
+    return HttpResponse.json({ session }, { status: 201 });
   }),
+
   http.patch(url('/therapy-plans/sessions/:sessionId'), async ({ params, request }) => {
     const body = await request.json();
-    return HttpResponse.json({ session: { id: params.sessionId, ...body } });
+    let updated = null;
+    therapyPlans = therapyPlans.map((p) => ({
+      ...p,
+      sessions: p.sessions.map((s) => {
+        if (s.id !== params.sessionId) return s;
+        updated = { ...s, ...body };
+        return updated;
+      }),
+    }));
+    if (!updated) return HttpResponse.json({ message: 'Session not found' }, { status: 404 });
+    return HttpResponse.json({ session: updated });
   }),
 
   // --------------- Feedback ---------------
