@@ -6,6 +6,8 @@ import {
   Bell,
   MessageSquareHeart,
   Video,
+  Users,
+  UserCog,
   Settings,
   LifeBuoy,
   Leaf,
@@ -18,11 +20,18 @@ import { cn } from '@/lib/utils';
 /** `roles` limits visibility; omit = visible to everyone. */
 const MENU = [
   { to: ROUTES.DASHBOARD, label: 'Dashboard', icon: LayoutDashboard },
+  {
+    to: ROUTES.PATIENTS,
+    label: 'Patients',
+    icon: Users,
+    roles: [ROLES.PRACTITIONER, ROLES.ADMIN],
+  },
   { to: ROUTES.APPOINTMENTS, label: 'Appointments', icon: CalendarDays },
   { to: ROUTES.THERAPY_PLANS, label: 'Therapy Plans', icon: ClipboardList },
   { to: ROUTES.FEEDBACK, label: 'Feedback', icon: MessageSquareHeart, roles: [ROLES.PATIENT] },
   { to: ROUTES.NOTIFICATIONS, label: 'Notifications', icon: Bell },
   { to: ROUTES.VIDEO_CONSULT, label: 'Consult', icon: Video },
+  { to: ROUTES.USERS, label: 'Users', icon: UserCog, roles: [ROLES.ADMIN] },
 ];
 
 const GENERAL = [

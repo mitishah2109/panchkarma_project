@@ -16,6 +16,10 @@ export const rescheduleAppointment = ({ id, ...payload }) =>
 export const cancelAppointment = ({ id }) =>
   http.patch(ENDPOINTS.appointments.cancel(id));
 
+/** Practitioner-side: set an appointment's status (e.g. COMPLETED, CANCELLED). */
+export const setAppointmentStatus = ({ id, status }) =>
+  http.patch(ENDPOINTS.appointments.status(id), { status });
+
 // ---- react-query hooks ----
 
 export function useMyAppointments(options = {}) {
@@ -42,3 +46,4 @@ function useAppointmentMutation(mutationFn, { onSuccess, ...options } = {}) {
 export const useBookAppointment = (o) => useAppointmentMutation(bookAppointment, o);
 export const useRescheduleAppointment = (o) => useAppointmentMutation(rescheduleAppointment, o);
 export const useCancelAppointment = (o) => useAppointmentMutation(cancelAppointment, o);
+export const useSetAppointmentStatus = (o) => useAppointmentMutation(setAppointmentStatus, o);

@@ -35,6 +35,8 @@ export const ROUTES = {
   NOTIFICATIONS: '/notifications',
   FEEDBACK: '/feedback',
   VIDEO_CONSULT: '/consult',
+  PATIENTS: '/patients',
+  USERS: '/users',
   SETTINGS: '/settings',
   HELP: '/help',
   NOT_FOUND: '*',

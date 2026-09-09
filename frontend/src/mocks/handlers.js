@@ -39,6 +39,7 @@ let users = loadUsers();
 // these reset on reload — fine for a mock
 let appointments = structuredClone(seed.appointments);
 let therapyPlans = structuredClone(seed.therapyPlans);
+let feedback = structuredClone(seed.feedback);
 let notifications = structuredClone(seed.notifications);
 let preferences = structuredClone(seed.notificationPreferences);
 
@@ -154,6 +155,16 @@ export const handlers = [
     return HttpResponse.json({ appointment: updated });
   }),
 
+  // [mock] practitioner-side status change
+  http.patch(url('/appointments/:id/status'), async ({ params, request }) => {
+    const { status } = await request.json();
+    const current = appointments.find((a) => a.id === params.id);
+    if (!current) return HttpResponse.json({ message: 'Appointment not found' }, { status: 404 });
+    const updated = { ...current, status };
+    appointments = appointments.map((a) => (a.id === params.id ? updated : a));
+    return HttpResponse.json({ appointment: updated });
+  }),
+
   // ------------- Patients -------------
   http.get(url('/patients'), () => HttpResponse.json({ patients: seed.patients })),
 
@@ -208,24 +219,77 @@ export const handlers = [
   }),
 
   // --------------- Feedback ---------------
-  http.get(url('/feedback/me'), () => HttpResponse.json({ feedback: seed.feedback })),
+  http.get(url('/feedback/me'), () => HttpResponse.json({ feedback })),
   http.post(url('/feedback/sessions/:sessionId'), async ({ params, request }) => {
     const body = await request.json();
-    return HttpResponse.json(
-      {
-        feedback: {
-          id: `fb-${Date.now()}`,
-          sessionId: params.sessionId,
-          createdAt: new Date().toISOString(),
-          ...body,
-        },
-      },
-      { status: 201 }
-    );
+    if (feedback.some((f) => f.sessionId === params.sessionId)) {
+      return HttpResponse.json(
+        { message: 'Feedback already submitted for this session' },
+        { status: 409 }
+      );
+    }
+    const entry = {
+      id: `fb-${Date.now()}`,
+      sessionId: params.sessionId,
+      symptoms: null,
+      sideEffects: null,
+      painLevel: null,
+      wellnessRating: null,
+      createdAt: new Date().toISOString(),
+      ...body,
+    };
+    feedback = [entry, ...feedback];
+    return HttpResponse.json({ feedback: entry }, { status: 201 });
   }),
 
   // --------------- Progress ---------------
   http.get(url('/progress/me'), () => HttpResponse.json({ progress: seed.progress })),
+
+  // ---------------- Admin ----------------
+  http.get(url('/admin/users'), () =>
+    HttpResponse.json({
+      users: users.map(({ id, name, email, role, createdAt }) => ({
+        id,
+        name,
+        email,
+        role,
+        createdAt,
+      })),
+    })
+  ),
+  http.get(url('/admin/overview'), () => {
+    const allSessions = therapyPlans.flatMap((p) => p.sessions ?? []);
+    const now = new Date();
+    const thisMonth = (d) => {
+      const x = new Date(d);
+      return x.getMonth() === now.getMonth() && x.getFullYear() === now.getFullYear();
+    };
+    // last 6 months of session counts (seeded shape for the chart)
+    const monthlySessions = Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+      const label = d.toLocaleString('en', { month: 'short' });
+      const count = allSessions.filter((s) => {
+        const sd = new Date(s.sessionDate);
+        return sd.getMonth() === d.getMonth() && sd.getFullYear() === d.getFullYear();
+      }).length;
+      return { month: label, sessions: count || Math.round(20 + Math.random() * 30) };
+    });
+
+    return HttpResponse.json({
+      overview: {
+        totalPatients: users.filter((u) => u.role === 'PATIENT').length,
+        totalPractitioners: users.filter((u) => u.role === 'PRACTITIONER').length,
+        activePlans: therapyPlans.length,
+        sessionsThisMonth: allSessions.filter((s) => thisMonth(s.sessionDate)).length,
+        completedSessions: allSessions.filter((s) => s.status === 'COMPLETED').length,
+        missedSessions: allSessions.filter((s) => s.status === 'MISSED').length,
+        upcomingAppointments: appointments.filter(
+          (a) => new Date(a.scheduledAt) > now && a.status !== 'CANCELLED'
+        ).length,
+        monthlySessions,
+      },
+    });
+  }),
 
   // ------------- Notifications -------------
   http.get(url('/notifications'), () => HttpResponse.json({ notifications })),

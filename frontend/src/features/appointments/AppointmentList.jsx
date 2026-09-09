@@ -2,14 +2,21 @@ import { useState } from 'react';
 import { CalendarClock } from 'lucide-react';
 
 import { Card, Badge, STATUS_TONE, Button, Loader } from '@/components/common';
-import { useMyAppointments, useCancelAppointment } from '@/api/appointments.api';
+import {
+  useMyAppointments,
+  useCancelAppointment,
+  useSetAppointmentStatus,
+} from '@/api/appointments.api';
 import { usePractitioners } from '@/api/practitioners.api';
+import { usePatients } from '@/api/patients.api';
+import { useAuth } from '@/hooks/useAuth';
+import { ROLES } from '@/lib/constants';
 import { formatDateTime, titleCase } from '@/lib/formatters';
 import RescheduleModal from './RescheduleModal';
 
 const ACTIVE = ['SCHEDULED', 'RESCHEDULED'];
 
-function Row({ appt, practitionerName, onReschedule, onCancel, canceling }) {
+function Row({ appt, counterpartName, isPatient, onReschedule, onCancel, onComplete, busy }) {
   const isUpcoming = ACTIVE.includes(appt.status) && new Date(appt.scheduledAt) > new Date();
   return (
     <li className="flex flex-wrap items-center justify-between gap-3 py-3">
@@ -22,14 +29,14 @@ function Row({ appt, practitionerName, onReschedule, onCancel, canceling }) {
             {appt.notes || 'Panchakarma session'}
           </p>
           <p className="text-xs text-slate-500">
-            {formatDateTime(appt.scheduledAt)} · {practitionerName}
+            {formatDateTime(appt.scheduledAt)} · {counterpartName}
           </p>
         </div>
       </div>
 
       <div className="flex items-center gap-2">
         <Badge tone={STATUS_TONE[appt.status] ?? 'slate'}>{titleCase(appt.status)}</Badge>
-        {isUpcoming && (
+        {isUpcoming && isPatient && (
           <>
             <Button size="sm" variant="secondary" onClick={() => onReschedule(appt)}>
               Reschedule
@@ -38,7 +45,22 @@ function Row({ appt, practitionerName, onReschedule, onCancel, canceling }) {
               size="sm"
               variant="ghost"
               className="text-red-600 hover:bg-red-50"
-              loading={canceling}
+              loading={busy}
+              onClick={() => onCancel(appt)}
+            >
+              Cancel
+            </Button>
+          </>
+        )}
+        {isUpcoming && !isPatient && (
+          <>
+            <Button size="sm" variant="secondary" loading={busy} onClick={() => onComplete(appt)}>
+              Mark complete
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-red-600 hover:bg-red-50"
               onClick={() => onCancel(appt)}
             >
               Cancel
@@ -51,9 +73,14 @@ function Row({ appt, practitionerName, onReschedule, onCancel, canceling }) {
 }
 
 export default function AppointmentList() {
+  const { role } = useAuth();
+  const isPatient = role === ROLES.PATIENT;
+
   const { data, isPending } = useMyAppointments();
-  const { data: practitionersData } = usePractitioners();
-  const { mutate: cancel, isPending: canceling, variables: cancelingVars } = useCancelAppointment();
+  const { data: practitionersData } = usePractitioners({ enabled: isPatient });
+  const { data: patientsData } = usePatients({ enabled: !isPatient });
+  const { mutate: cancel, isPending: canceling, variables: cancelVars } = useCancelAppointment();
+  const { mutate: setStatus, isPending: setting, variables: statusVars } = useSetAppointmentStatus();
 
   const [rescheduleTarget, setRescheduleTarget] = useState(null);
 
@@ -61,8 +88,13 @@ export default function AppointmentList() {
 
   const appointments = data?.appointments ?? [];
   const nameById = Object.fromEntries(
-    (practitionersData?.practitioners ?? []).map((p) => [p.id, p.name])
+    isPatient
+      ? (practitionersData?.practitioners ?? []).map((p) => [p.id, p.name])
+      : (patientsData?.patients ?? []).map((p) => [p.id, p.name])
   );
+  const counterpartOf = (a) =>
+    nameById[isPatient ? a.practitionerId : a.patientId] ??
+    (isPatient ? 'Practitioner' : 'Patient');
 
   const now = Date.now();
   const upcoming = appointments
@@ -73,8 +105,12 @@ export default function AppointmentList() {
     .sort((a, b) => new Date(b.scheduledAt) - new Date(a.scheduledAt));
 
   const handleCancel = (appt) => {
-    if (window.confirm('Cancel this appointment?')) cancel({ id: appt.id });
+    if (!window.confirm('Cancel this appointment?')) return;
+    isPatient ? cancel({ id: appt.id }) : setStatus({ id: appt.id, status: 'CANCELLED' });
   };
+  const handleComplete = (appt) => setStatus({ id: appt.id, status: 'COMPLETED' });
+
+  const busyId = canceling ? cancelVars?.id : setting ? statusVars?.id : null;
 
   const Section = ({ title, items, emptyText }) => (
     <Card>
@@ -90,10 +126,12 @@ export default function AppointmentList() {
               <Row
                 key={a.id}
                 appt={a}
-                practitionerName={nameById[a.practitionerId] ?? 'Practitioner'}
+                counterpartName={counterpartOf(a)}
+                isPatient={isPatient}
                 onReschedule={setRescheduleTarget}
                 onCancel={handleCancel}
-                canceling={canceling && cancelingVars?.id === a.id}
+                onComplete={handleComplete}
+                busy={busyId === a.id}
               />
             ))}
           </ul>

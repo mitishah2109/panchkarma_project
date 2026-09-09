@@ -6,3 +6,4 @@ export { default as Modal } from './Modal';
 export { default as Badge, STATUS_TONE } from './Badge';
 export { default as StatCard } from './StatCard';
 export { default as PageHeader } from './PageHeader';
+export { default as Switch } from './Switch';

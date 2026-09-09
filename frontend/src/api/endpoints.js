@@ -20,6 +20,8 @@ export const ENDPOINTS = {
     mine: '/appointments/me',
     reschedule: (id) => `/appointments/${id}/reschedule`,
     cancel: (id) => `/appointments/${id}/cancel`,
+    // [mock] practitioner-side status change (complete / cancel a session)
+    status: (id) => `/appointments/${id}/status`,
   },
 
   // ---- Practitioners / patients [mock] ----
@@ -29,6 +31,13 @@ export const ENDPOINTS = {
   },
   patients: {
     root: '/patients',
+  },
+
+  // ---- Admin [mock] ----
+  // No backend admin endpoints yet.
+  admin: {
+    overview: '/admin/overview',
+    users: '/admin/users',
   },
 
   // ---- Therapy plans [live] ----

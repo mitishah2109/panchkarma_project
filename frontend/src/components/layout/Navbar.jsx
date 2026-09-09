@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router-dom';
-import { Menu, Bell, LogOut, Search } from 'lucide-react';
+import { Menu, LogOut, Search } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUiStore } from '@/store/uiStore';
 import { ROUTES, ROLE_LABELS } from '@/lib/constants';
 import { initials } from '@/lib/formatters';
+import NotificationBell from '@/features/notifications/NotificationBell';
 
 /**
  * Top bar. Search is a visual placeholder for now; the bell links to the
@@ -39,14 +40,7 @@ export default function Navbar() {
       </div>
 
       <div className="ml-auto flex items-center gap-2">
-        <button
-          onClick={() => navigate(ROUTES.NOTIFICATIONS)}
-          className="relative rounded p-2 text-slate-500 hover:bg-slate-100"
-          aria-label="Notifications"
-        >
-          <Bell className="size-5" />
-          <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-brand-500" />
-        </button>
+        <NotificationBell />
 
         <div className="flex items-center gap-2 pl-1">
           <span className="grid size-8 place-items-center rounded-full bg-brand-100 text-xs font-semibold text-brand-700">

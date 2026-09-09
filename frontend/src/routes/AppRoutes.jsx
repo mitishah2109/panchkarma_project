@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 
-import { ROUTES } from '@/lib/constants';
+import { ROUTES, ROLES } from '@/lib/constants';
 import { useAuth } from '@/hooks/useAuth';
 import ProtectedRoute from './ProtectedRoute';
 
@@ -9,6 +9,10 @@ import RegisterPage from '@/pages/RegisterPage';
 import DashboardPage from '@/pages/DashboardPage';
 import AppointmentsPage from '@/pages/AppointmentsPage';
 import TherapyPlansPage from '@/pages/TherapyPlansPage';
+import FeedbackPage from '@/pages/FeedbackPage';
+import NotificationsPage from '@/pages/NotificationsPage';
+import PatientsPage from '@/pages/PatientsPage';
+import UsersPage from '@/pages/UsersPage';
 import SettingsPage from '@/pages/SettingsPage';
 import HelpPage from '@/pages/HelpPage';
 import NotFoundPage from '@/pages/NotFoundPage';
@@ -62,6 +66,38 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute>
             <TherapyPlansPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={ROUTES.FEEDBACK}
+        element={
+          <ProtectedRoute allowedRoles={[ROLES.PATIENT]}>
+            <FeedbackPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={ROUTES.NOTIFICATIONS}
+        element={
+          <ProtectedRoute>
+            <NotificationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={ROUTES.PATIENTS}
+        element={
+          <ProtectedRoute allowedRoles={[ROLES.PRACTITIONER, ROLES.ADMIN]}>
+            <PatientsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={ROUTES.USERS}
+        element={
+          <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+            <UsersPage />
           </ProtectedRoute>
         }
       />

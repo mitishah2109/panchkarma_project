@@ -75,7 +75,7 @@ export const practitioners = users
 /** Convenience view — patients only, for the "assign plan" picker. */
 export const patients = users
   .filter((u) => u.role === 'PATIENT')
-  .map(({ id, name, email }) => ({ id, name, email }));
+  .map(({ id, name, email, createdAt }) => ({ id, name, email, createdAt }));
 
 export const appointments = [
   {
